@@ -1,0 +1,23 @@
+{
+  "name": "federation-deprecation-bug",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.6.5",
+  "dependencies": {
+    "@apollo/subgraph": "^2.11.2",
+    "@graphql-tools/utils": "^10.8.6",
+    "@pothos/core": "^4.7.0",
+    "@pothos/plugin-directives": "^4.2.3",
+    "@pothos/plugin-federation": "^4.4.2",
+    "@pothos/plugin-relay": "^4.5.0",
+    "graphql": "^16.11.0",
+    "typescript": "^5.8.3"
+  }
+}
