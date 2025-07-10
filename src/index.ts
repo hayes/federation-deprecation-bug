@@ -1,67 +1,56 @@
-import { printSchemaWithDirectives } from '@graphql-tools/utils';
 import SchemaBuilder from '@pothos/core';
-import DirectivesPlugin from '@pothos/plugin-directives';
-import FederationPlugin from '@pothos/plugin-federation';
+import RelayPlugin from '@pothos/plugin-relay'
+import { execute, parse } from 'graphql';
 
-const builder = new SchemaBuilder<{
-  Directives: {
-    custom: {
-      locations: 'INTERFACE' | 'OBJECT';
-      args: {};
-    };
-    link: {
-      locations: 'SCHEMA';
-      args: {
-        url: string;
-        import: string[];
-      };
-    };
-  };
-}>({
-  plugins: [DirectivesPlugin, FederationPlugin],
-  directives: {
-    useGraphQLToolsUnorderedDirectives: true,
-  },
+const builder = new SchemaBuilder({
+  plugins: [RelayPlugin],
+});
+builder.queryType({
+  fields: (t) => ({
+    numbers: t.connection({
+      type: 'Int',
+      resolve: () => {
+        return {
+          pageInfo: {
+            startCursor: '1',
+            endCursor: '10',
+            hasNextPage: false,
+            hasPreviousPage: false,
+          },
+          edges: (async function* () {
+            for (let i = 1; i <= 10; i++) {
+              yield {
+                cursor: i.toString(),
+                node: i,
+              }
+            }
+          })(),
+        };
+      },
+    }),
+  }),
 });
 
-export interface NodeShape {
-    id: string;
-    deprecatedField: string;
-  }
+  export const schema = builder.toSchema({});
 
-  export const Node = builder.interfaceRef<NodeShape>("Node").implement({
-    fields: (t) => ({
-      id: t.exposeID("id"),
-      deprecatedField: t.exposeString("deprecatedField", {
-        deprecationReason: "...",
-      }),
-    }),
-  });
+  Promise.resolve(execute({
+    schema,
+    document: parse(`
+      query {
+        numbers {
+          pageInfo {
+            startCursor
+            endCursor
+          }
+          edges {
+            node
+            cursor
+          }
+        }
+      }
+    `,
+  ),
+  contextValue: {},
+})).then(console.log).catch(console.error)
 
-  export interface UserShape extends NodeShape {
-    name: string;
-  }
-
-  export const User = builder.objectRef<UserShape>("User");
-
-  User.implement({
-    interfaces: [Node],
-    fields: (t) => ({
-      name: t.exposeString("name"),
-    }),
-  });
-
-  // builder
-  builder.queryType({
-    fields: (t) => ({
-      hello: t.string({
-        resolve: () => "Hello, world!",
-      }),
-    }),
-  });
-
-
-  export const schema = builder.toSubGraphSchema({});
-
-  console.log(printSchemaWithDirectives(schema));
 
